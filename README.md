@@ -1,2 +1,2 @@
 # Software-Engineering
-Course Assignment of Software engineering (NKU, Spring 2023)
+Course assignment of Software engineering (NKU, Spring 2023)
