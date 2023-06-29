@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>sudoku.h</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#pragma once
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;vector&gt;
+#include &lt;random&gt;
+#include &lt;string&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
+#include &lt;algorithm&gt;
+#include &lt;Windows.h&gt;
+using namespace std;
+
+
+const int N = 9;
+
+
+<span style = "background-color:#dfd">int randEx(){</span>
+    LARGE_INTEGER seed;
+<span style = "background-color:#dfd">    QueryPerformanceFrequency(&amp;seed);
+    QueryPerformanceCounter(&amp;seed);
+    srand(unsigned int(seed.QuadPart));</span>
+
+<span style = "background-color:#dfd">    return rand();
+}</span>
+
+
+class sudoku{
+public:
+<span style = "background-color:#dfd">    bool active = false;</span>
+
+<span style = "background-color:#dfd">    sudoku() {
+        active = false;
+    }</span>
+
+<span style = "background-color:#dfd">    sudoku(vector&lt;vector&lt;char&gt;&gt;&amp; board){</span>
+        // printBoard(board);
+<span style = "background-color:#dfd">        active = dfs(board, 0);
+    }</span>
+
+<span style = "background-color:#fdd">    void printBoard(vector&lt;vector&lt;char&gt;&gt;&amp; board){
+        cout &lt;&lt; " |---|---|---|---|---|---|---|---|---| " &lt;&lt; endl;
+        for (int i = 0; i &lt; int(board.size()); i++){
+            for (int j = 0; j &lt; int(board.size()); j++){
+                cout &lt;&lt; " | " &lt;&lt; board[i][j];
+            }
+            cout &lt;&lt; " | " &lt;&lt; endl;
+            cout &lt;&lt; " |---|---|---|---|---|---|---|---|---| " &lt;&lt; endl;
+        }
+    }</span>
+
+<span style = "background-color:#dfd">    void outputBoard(vector&lt;vector&lt;char&gt;&gt;&amp; board, ofstream&amp; f){
+        f &lt;&lt; " |---|---|---|---|---|---|---|---|---| " &lt;&lt; endl;
+        for (int i = 0; i &lt; int(board.size()); i++) {
+            for (int j = 0; j &lt; int(board.size()); j++) {
+                f &lt;&lt; " | " &lt;&lt; board[i][j];
+            }
+            f &lt;&lt; " | " &lt;&lt; endl;
+            f &lt;&lt; " |---|---|---|---|---|---|---|---|---| " &lt;&lt; endl;
+        }
+        f &lt;&lt; endl;
+    }</span>
+
+<span style = "background-color:#dfd">    bool isValid(int row, int col, int num, vector&lt;vector&lt;char&gt;&gt;&amp; board){</span>
+        // ¼ì²éÐÐÓÐÃ»ÓÐÖØ¸´µÄ£¬Èç¹ûÓÐ·µ»Øfalse
+<span style = "background-color:#dfd">        for (int i = 0; i &lt; int(board.size()); i++){
+            if (num == board[row][i] - '0'){
+                return false;</span>
+            }
+<span style = "background-color:#dfd">        }</span>
+        // ¼ì²éÁÐÓÐÃ»ÓÐÖØ¸´µÄ£¬Èç¹ûÓÐ·µ»Øfalse
+<span style = "background-color:#dfd">        for (int i = 0; i &lt; int(board.size()); i++)</span>
+        {
+<span style = "background-color:#dfd">            if (num == board[i][col] - '0')
+                return false;
+        }</span>
+        // ¼ì²éÊý×ÖËùÔÚµÄ·½¿éÓÐÃ»ÓÐÖØ¸´µÄ£¬Èç¹ûÓÐ·µ»Øfalse
+<span style = "background-color:#dfd">        int startrow = row / 3 * 3;
+        int startcol = col / 3 * 3;
+        int endrow = startrow + 3;
+        int endcol = startcol + 3;
+        for (int i = startrow; i &lt; endrow; i++){
+            for (int j = startcol; j &lt; endcol; j++){
+                if (num == board[i][j] - '0')
+                    return false;
+            }
+        }
+        return true;</span>
+
+<span style = "background-color:#dfd">    }</span>
+
+    // ÓÃÓÚÉú³É²»ÓÃÖÕ¾ÖµÄÇó½âº¯Êý£¬ÐèÒªshuffle
+<span style = "background-color:#dfd">    bool solveSudoku_Gen(std::vector&lt;std::vector&lt;char&gt;&gt;&amp; board) {
+        for (int row = 0; row &lt; N; row++) {
+            for (int col = 0; col &lt; N; col++) {
+                if (board[row][col] == '$') {
+                    std::vector&lt;int&gt; candidates = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                    std::random_device rd;
+                    std::mt19937 g(rd());
+                    std::shuffle(candidates.begin(), candidates.end(), g);
+                    for (char num : candidates) {
+                        if (isValid(row, col, num, board)) {
+                            board[row][col] = num + '0';
+                            if (solveSudoku_Gen(board)) {
+                                return true;</span>
+                            }
+<span style = "background-color:#dfd">                            board[row][col] = '$';  // »ØËÝ</span>
+                        }
+<span style = "background-color:#dfd">                    }
+                    return false;</span>
+                }
+<span style = "background-color:#dfd">            }
+        }</span>
+
+<span style = "background-color:#dfd">        return true;  // Êý¶ÀÒÑ¾­ÌîÂú
+    }</span>
+
+    // ÕâÀïÓÃÓÚÉú³É»¥²»ÏàÍ¬µÄÊý¶ÀÖÕ¾Ö
+<span style = "background-color:#dfd">    void generateSudokuGrids(vector&lt;vector&lt;vector&lt;char&gt;&gt;&gt;&amp; grids, int count) {
+        random_device rd;
+        mt19937 g(rd());</span>
+
+<span style = "background-color:#dfd">        while (int(grids.size()) &lt; count) {
+            vector&lt;vector&lt;char&gt;&gt; temp_sudoku(N, vector&lt;char&gt;(N, '$'));
+            solveSudoku_Gen(temp_sudoku);</span>
+
+            // ¼ì²éÉú³ÉµÄÊý¶À±íÊÇ·ñÒÑ¾­´æÔÚÓÚ grids ÖÐ
+<span style = "background-color:#dfd">            if (std::find(grids.begin(), grids.end(), temp_sudoku) == grids.end()) {
+                grids.push_back(temp_sudoku);</span>
+            }
+<span style = "background-color:#dfd">        }
+    }</span>
+
+<span style = "background-color:#dfd">    void swapCol(int m, int n, vector&lt;vector&lt;char&gt;&gt;&amp; board){
+        vector&lt;char&gt;temp(board.size(), ' ');
+        for (int i = 0; i &lt; int(board.size()); i++){
+            temp[i] = board[i][m];
+            board[i][m] = board[i][n];
+            board[i][n] = temp[i];
+        }
+    }</span>
+
+<span style = "background-color:#dfd">    void selectBlank(int nums, vector&lt;vector&lt;char&gt;&gt;&amp; board){</span>
+        // srand(time(NULL));
+<span style = "background-color:#dfd">        while (nums){
+            int row = randEx() % 9;
+            int col = randEx() % 9;
+            if (board[row][col] != '$'){
+                board[row][col] = '$';
+                nums--;</span>
+            }
+<span style = "background-color:#dfd">        }
+    }</span>
+
+<span style = "background-color:#dfd">    void create(int blank, vector&lt;vector&lt;char&gt;&gt;&amp; board){</span>
+        // Ð¡¾Å¹¬¸ñÖÐµÄÐÐºÍÁÐ½»»»£¬ÓÐÒÔÏÂ£¹ÖÖ½»»»·½Ê½
+<span style = "background-color:#dfd">        int choice[9][2] = { {0,1},{0,2},{1,2},{3,4},{3,5},{4,5},{6,7},{6,8},{7,8} };</span>
+        // srand(time(NULL));
+
+<span style = "background-color:#dfd">        for (int j = 0; j &lt; 10; j++){
+            int i = randEx() % 9;
+            board[choice[i][0]].swap(board[choice[i][1]]);   // Ëæ»ú½»»»Á½ÐÐ
+            swapCol(choice[i][0], choice[i][1], board);      // Ëæ»ú½»»»Á½ÁÐ
+        }
+        selectBlank(blank, board);    // ¸ù¾ÝÄÑ¶È¿ÉÒÔÑ¡Ôñ²»Í¬ÊýÁ¿µÄ¿Õ¸ñ
+    }</span>
+
+    // ´Ó£°¿ªÊ¼ÒÀ´Î±éÀú81¸ö¸ñ×Ó£¬¼ÆËã´ËÊý¶À
+<span style = "background-color:#dfd">    bool dfs(vector&lt;vector&lt;char&gt;&gt;&amp; board, int start){</span>
+        // 81È«²¿±éÀú³É¹¦ËµÃ÷ÒÑ¾­³É¹¦½â³öÊý¶À
+<span style = "background-color:#dfd">        if (start == 81){
+            return true;</span>
+<span style = "background-color:#fdd">        }</span>
+        else{
+<span style = "background-color:#dfd">            bool nextvalid = false;
+            int row = start / 9;
+            int col = start % 9;
+            if (board[row][col] == '$'){
+                for (int i = 1; i &lt;= 9; i++){</span>
+                    // ´Ó£±£­£¹ÒÀ´Î·ÅÈë¿Õ¸ñ£¬²¢ÅÐ¶ÏÊÇ·ñºÏ·¨
+<span style = "background-color:#dfd">                    if (isValid(row, col, i, board)){
+                        board[row][col] = i + '0';</span>
+                        // ÅÐ¶Ï´Ë·½¸ñµÄÏÂÒ»¸ö·½¸ñÊÇ·ñ³É¹¦Ð´Èë
+<span style = "background-color:#dfd">                        nextvalid = dfs(board, start + 1);
+                        if (!nextvalid){
+                            board[row][col] = '$';  // »ØËÝ</span>
+                        }
+                    }
+<span style = "background-color:#dfd">                }
+            }</span>
+            else{
+<span style = "background-color:#fdd">                nextvalid = dfs(board, start + 1);</span>
+            }
+<span style = "background-color:#dfd">            return nextvalid;</span>
+        }
+<span style = "background-color:#dfd">    }</span>
+
+    // ÕâÀïÓÃÓÚÀ´¼ì²éÊÇ·ñÓÐÎ¨Ò»½â£¬»ØËÝ·¨
+<span style = "background-color:#dfd">    int solveSudoku(vector&lt;vector&lt;char&gt;&gt;&amp; board) {
+        for (int row = 0; row &lt; N; row++) {
+            for (int col = 0; col &lt; N; col++) {
+                if (board[row][col] == '$') {
+                    int count = 0;
+                    for (int i = 1; i &lt;= 9; i++) {
+                        if (isValid(row, col, i, board)) {
+                            board[row][col] = i + '0';
+                            count += solveSudoku(board);
+                            board[row][col] = '$';  // »ØËÝ</span>
+                        }
+<span style = "background-color:#dfd">                    }
+                    return count;</span>
+                }
+<span style = "background-color:#dfd">            }
+        }</span>
+
+<span style = "background-color:#dfd">        return 1;  // Êý¶ÀÒÑ¾­ÌîÂú£¬·µ»Ø 1
+    }</span>
+
+    // ÐèÒª´´½¨Ò»¸öÊý¶ÀµÄ¸±±¾£¬·µ»ØÊý¶ÀµÄ½âÊýÁ¿
+<span style = "background-color:#dfd">    int countSudokuSolutions(vector&lt;vector&lt;char&gt;&gt;&amp; board) {
+        vector&lt;vector&lt;char&gt;&gt; copy = board;  
+        return solveSudoku(copy);
+    }</span>
+};</pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

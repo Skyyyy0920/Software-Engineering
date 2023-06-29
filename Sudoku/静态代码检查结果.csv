@@ -1,0 +1,59 @@
+File, Line, Severity, Id, Summary
+sudoku.cpp,1,information,missingIncludeSystem,Include file: <iostream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.cpp,2,information,missingIncludeSystem,Include file: <fstream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,2,information,missingIncludeSystem,Include file: <iostream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,3,information,missingIncludeSystem,Include file: <fstream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,4,information,missingIncludeSystem,Include file: <vector> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,5,information,missingIncludeSystem,Include file: <random> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,6,information,missingIncludeSystem,Include file: <string> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,7,information,missingIncludeSystem,Include file: <cstdlib> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,8,information,missingIncludeSystem,Include file: <ctime> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,9,information,missingIncludeSystem,Include file: <algorithm> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,10,information,missingIncludeSystem,Include file: <Windows.h> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+sudoku.h,35,style,noExplicitConstructor,Class 'sudoku' has a constructor with 1 argument that is not explicit.
+sudoku.h,40,style,constParameterReference,Parameter 'board' can be declared as reference to const
+sudoku.h,51,style,constParameterReference,Parameter 'board' can be declared as reference to const
+sudoku.h,63,style,constParameterReference,Parameter 'board' can be declared as reference to const
+sudoku.h,219,style,constParameterReference,Parameter 'board' can be declared as reference to const
+filedeal.h,2,information,missingIncludeSystem,Include file: <iostream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+filedeal.h,3,information,missingIncludeSystem,Include file: <fstream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+filedeal.h,4,information,missingIncludeSystem,Include file: <map> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+filedeal.h,53,style,useStlAlgorithm,Consider using std::copy_if algorithm instead of a raw loop.
+cmdline.h,30,information,missingIncludeSystem,Include file: <iostream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,31,information,missingIncludeSystem,Include file: <sstream> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,32,information,missingIncludeSystem,Include file: <vector> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,33,information,missingIncludeSystem,Include file: <map> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,34,information,missingIncludeSystem,Include file: <string> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,35,information,missingIncludeSystem,Include file: <stdexcept> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,36,information,missingIncludeSystem,Include file: <typeinfo> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,37,information,missingIncludeSystem,Include file: <cstring> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,38,information,missingIncludeSystem,Include file: <algorithm> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,43,information,missingIncludeSystem,Include file: <cstdlib> not found. Please note: Cppcheck does not need standard library headers to get proper results.
+cmdline.h,149,style,noExplicitConstructor,Class 'cmdline_error' has a constructor with 1 argument that is not explicit.
+cmdline.h,660,style,missingOverride,The function 'has_value' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,662,style,missingOverride,The function 'set' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,667,style,missingOverride,The function 'set' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,671,style,missingOverride,The function 'has_set' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,675,style,missingOverride,The function 'valid' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,679,style,missingOverride,The function 'must' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,683,style,missingOverride,The function 'name' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,687,style,missingOverride,The function 'short_name' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,691,style,missingOverride,The function 'description' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,695,style,missingOverride,The function 'short_description' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,724,style,missingOverride,The function 'has_value' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,726,style,missingOverride,The function 'set' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,730,style,missingOverride,The function 'set' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,741,style,missingOverride,The function 'has_set' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,745,style,missingOverride,The function 'valid' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,750,style,missingOverride,The function 'must' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,754,style,missingOverride,The function 'name' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,758,style,missingOverride,The function 'short_name' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,762,style,missingOverride,The function 'description' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,766,style,missingOverride,The function 'short_description' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,803,style,missingOverride,The function 'read' overrides a function in a base class but is not marked with a 'override' specifier.
+cmdline.h,344,performance,passedByValue,Function parameter 'def' should be passed by const reference.
+cmdline.h,455,style,unreadVariable,Variable 'lookup[initial]' is assigned a value that is never used.
+cmdline.h,327,performance,postfixOperator,Prefer prefix ++/-- operators for non-primitive types.
+cmdline.h,450,performance,postfixOperator,Prefer prefix ++/-- operators for non-primitive types.
+cmdline.h,531,performance,postfixOperator,Prefer prefix ++/-- operators for non-primitive types.
+cmdline.h,41,information,missingIncludeSystem,Include file: <cxxabi.h> not found. Please note: Cppcheck does not need standard library headers to get proper results.

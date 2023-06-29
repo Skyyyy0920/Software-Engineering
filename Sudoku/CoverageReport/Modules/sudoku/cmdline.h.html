@@ -1,0 +1,846 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>cmdline.h</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+/*
+  Copyright (c) 2009, Hideyuki Tanaka
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+  * Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+  * Neither the name of the &lt;organization&gt; nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY &lt;copyright holder&gt; ''AS IS'' AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  DISCLAIMED. IN NO EVENT SHALL &lt;copyright holder&gt; BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#pragma once
+
+#include &lt;iostream&gt;
+#include &lt;sstream&gt;
+#include &lt;vector&gt;
+#include &lt;map&gt;
+#include &lt;string&gt;
+#include &lt;stdexcept&gt;
+#include &lt;typeinfo&gt;
+#include &lt;cstring&gt;
+#include &lt;algorithm&gt;
+// µ±±àÒëÆ÷·ÇgccÊ±,²»°üº¬cxxabi.hÍ·ÎÄ¼þ
+#ifdef __GNUC__
+#include &lt;cxxabi.h&gt;
+#endif
+#include &lt;cstdlib&gt;
+
+namespace cmdline {
+
+    namespace detail {
+
+        template &lt;typename Target, typename Source, bool Same&gt;
+        class lexical_cast_t {
+        public:
+            static Target cast(const Source&amp; arg) {
+                Target ret;
+                std::stringstream ss;
+                if (!(ss &lt;&lt; arg &amp;&amp; ss &gt;&gt; ret &amp;&amp; ss.eof()))
+                    throw std::bad_cast();
+
+                return ret;
+            }
+        };
+
+        template &lt;typename Target, typename Source&gt;
+        class lexical_cast_t&lt;Target, Source, true&gt; {
+        public:
+<span style = "background-color:#dfd">            static Target cast(const Source&amp; arg) {
+                return arg;
+            }</span>
+        };
+
+        template &lt;typename Source&gt;
+        class lexical_cast_t&lt;std::string, Source, false&gt; {
+        public:
+<span style = "background-color:#dfd">            static std::string cast(const Source&amp; arg) {
+                std::ostringstream ss;
+                ss &lt;&lt; arg;
+                return ss.str();
+            }</span>
+        };
+
+        template &lt;typename Target&gt;
+        class lexical_cast_t&lt;Target, std::string, false&gt; {
+        public:
+<span style = "background-color:#dfd">            static Target cast(const std::string&amp; arg) {</span>
+                Target ret;
+<span style = "background-color:#dfd">                std::istringstream ss(arg);
+                if (!(ss &gt;&gt; ret &amp;&amp; ss.eof()))</span>
+<span style = "background-color:#fdd">                    throw std::bad_cast();</span>
+<span style = "background-color:#dfd">                return ret;
+            }</span>
+        };
+
+        template &lt;typename T1, typename T2&gt;
+        struct is_same {
+            static const bool value = false;
+        };
+
+        template &lt;typename T&gt;
+        struct is_same&lt;T, T&gt; {
+            static const bool value = true;
+        };
+
+        template&lt;typename Target, typename Source&gt;
+        Target lexical_cast(const Source&amp; arg)
+<span style = "background-color:#dfd">        {
+            return lexical_cast_t&lt;Target, Source, detail::is_same&lt;Target, Source&gt;::value&gt;::cast(arg);
+        }</span>
+
+        static inline std::string demangle(const std::string&amp; name)
+<span style = "background-color:#dfd">        {</span>
+#ifdef _MSC_VER
+<span style = "background-color:#dfd">            return name; // ÎªMSVC±àÒëÆ÷Ê±Ö±½Ó·µ»Øname</span>
+#elif defined(__GNUC__) 
+            // Îªgcc±àÒëÆ÷Ê±»¹µ÷ÓÃÔ­À´µÄ´úÂë
+            int status = 0;
+            char* p = abi::__cxa_demangle(name.c_str(), 0, 0, &amp;status);
+            std::string ret(p);
+            free(p);
+            return ret;
+#else
+            // ÆäËû²»Ö§³ÖµÄ±àÒëÆ÷ÐèÒª×Ô¼ºÊµÏÖÕâ¸ö·½·¨
+#error unexpected c complier (msc/gcc), Need to implement this method for demangle
+#endif
+<span style = "background-color:#dfd">        }</span>
+
+        template &lt;class T&gt;
+        std::string readable_typename()
+<span style = "background-color:#dfd">        {
+            return demangle(typeid(T).name());
+        }</span>
+
+        template &lt;class T&gt;
+        std::string default_value(T def)
+<span style = "background-color:#dfd">        {
+            return detail::lexical_cast&lt;std::string&gt;(def);
+        }</span>
+
+        template &lt;&gt;
+        inline std::string readable_typename&lt;std::string&gt;()
+<span style = "background-color:#dfd">        {
+            return "string";
+        }</span>
+
+    } // detail
+
+    //-----
+
+    class cmdline_error : public std::exception {
+    public:
+<span style = "background-color:#fdd">        cmdline_error(const std::string&amp; msg) : msg(msg) {}
+        ~cmdline_error() throw() {}
+        const char* what() const throw() { return msg.c_str(); }</span>
+    private:
+        std::string msg;
+    };
+
+    template &lt;class T&gt;
+    struct default_reader {
+<span style = "background-color:#dfd">        T operator()(const std::string&amp; str) {
+            return detail::lexical_cast&lt;T&gt;(str);
+        }</span>
+    };
+
+    template &lt;class T&gt;
+    struct range_reader {
+<span style = "background-color:#dfd">        range_reader(const T&amp; low, const T&amp; high) : low(low), high(high) {}
+        T operator()(const std::string&amp; s) const {
+            T ret = default_reader&lt;T&gt;()(s);
+            if (!(ret &gt;= low &amp;&amp; ret &lt;= high)) throw cmdline::cmdline_error("range_error");
+            return ret;
+        }</span>
+    private:
+        T low, high;
+    };
+
+    template &lt;class T&gt;
+    range_reader&lt;T&gt; range(const T&amp; low, const T&amp; high)
+<span style = "background-color:#dfd">    {
+        return range_reader&lt;T&gt;(low, high);
+    }</span>
+
+    template &lt;class T&gt;
+    struct oneof_reader {
+        T operator()(const std::string&amp; s) {
+            T ret = default_reader&lt;T&gt;()(s);
+            if (std::find(alt.begin(), alt.end(), ret) == alt.end())
+                throw cmdline_error("");
+            return ret;
+        }
+        void add(const T&amp; v) { alt.push_back(v); }
+    private:
+        std::vector&lt;T&gt; alt;
+    };
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4, T a5)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        ret.add(a5);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4, T a5, T a6)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        ret.add(a5);
+        ret.add(a6);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        ret.add(a5);
+        ret.add(a6);
+        ret.add(a7);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        ret.add(a5);
+        ret.add(a6);
+        ret.add(a7);
+        ret.add(a8);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8, T a9)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        ret.add(a5);
+        ret.add(a6);
+        ret.add(a7);
+        ret.add(a8);
+        ret.add(a9);
+        return ret;
+    }
+
+    template &lt;class T&gt;
+    oneof_reader&lt;T&gt; oneof(T a1, T a2, T a3, T a4, T a5, T a6, T a7, T a8, T a9, T a10)
+    {
+        oneof_reader&lt;T&gt; ret;
+        ret.add(a1);
+        ret.add(a2);
+        ret.add(a3);
+        ret.add(a4);
+        ret.add(a5);
+        ret.add(a6);
+        ret.add(a7);
+        ret.add(a8);
+        ret.add(a9);
+        ret.add(a10);
+        return ret;
+    }
+
+    //-----
+
+    class parser {
+    public:
+<span style = "background-color:#dfd">        parser() {
+        }
+        ~parser() {
+            for (std::map&lt;std::string, option_base*&gt;::iterator p = options.begin();
+                p != options.end(); p++)
+                delete p-&gt;second;
+        }</span>
+
+        void add(const std::string&amp; name,
+            char short_name = 0,
+<span style = "background-color:#dfd">            const std::string&amp; desc = "") {
+            if (options.count(name)) throw cmdline_error("multiple definition: " + name);
+            options[name] = new option_without_value(name, short_name, desc);
+            ordered.push_back(options[name]);
+        }</span>
+
+        template &lt;class T&gt;
+        void add(const std::string&amp; name,
+            char short_name = 0,
+            const std::string&amp; desc = "",
+            bool need = true,
+<span style = "background-color:#dfd">            const T def = T()) {
+            add(name, short_name, desc, need, def, default_reader&lt;T&gt;());
+        }</span>
+
+        template &lt;class T, class F&gt;
+        void add(const std::string&amp; name,
+            char short_name = 0,
+            const std::string&amp; desc = "",
+            bool need = true,
+            const T def = T(),
+<span style = "background-color:#dfd">            F reader = F()) {
+            if (options.count(name)) throw cmdline_error("multiple definition: " + name);
+            options[name] = new option_with_value_with_reader&lt;T, F&gt;(name, short_name, need, def, desc, reader);
+            ordered.push_back(options[name]);
+        }</span>
+
+        void footer(const std::string&amp; f) {
+            ftr = f;
+        }
+
+        void set_program_name(const std::string&amp; name) {
+            prog_name = name;
+        }
+
+<span style = "background-color:#dfd">        bool exist(const std::string&amp; name) const {
+            if (options.count(name) == 0) throw cmdline_error("there is no flag: --" + name);
+            return options.find(name)-&gt;second-&gt;has_set();
+        }</span>
+
+        template &lt;class T&gt;
+<span style = "background-color:#dfd">        const T&amp; get(const std::string&amp; name) const {
+            if (options.count(name) == 0) throw cmdline_error("there is no flag: --" + name);
+            const option_with_value&lt;T&gt;* p = dynamic_cast&lt;const option_with_value&lt;T&gt;*&gt;(options.find(name)-&gt;second);
+            if (p == NULL) throw cmdline_error("type mismatch flag '" + name + "'");
+            return p-&gt;get();
+        }</span>
+
+        const std::vector&lt;std::string&gt;&amp; rest() const {
+            return others;
+        }
+
+        bool parse(const std::string&amp; arg) {
+            std::vector&lt;std::string&gt; args;
+
+            std::string buf;
+            bool in_quote = false;
+            for (std::string::size_type i = 0; i &lt; arg.length(); i++) {
+                if (arg[i] == '\"') {
+                    in_quote = !in_quote;
+                    continue;
+                }
+
+                if (arg[i] == ' ' &amp;&amp; !in_quote) {
+                    args.push_back(buf);
+                    buf = "";
+                    continue;
+                }
+
+                if (arg[i] == '\\') {
+                    i++;
+                    if (i &gt;= arg.length()) {
+                        errors.push_back("unexpected occurrence of '\\' at end of string");
+                        return false;
+                    }
+                }
+
+                buf += arg[i];
+            }
+
+            if (in_quote) {
+                errors.push_back("quote is not closed");
+                return false;
+            }
+
+            if (buf.length() &gt; 0)
+                args.push_back(buf);
+
+            for (size_t i = 0; i &lt; args.size(); i++)
+                std::cout &lt;&lt; "\"" &lt;&lt; args[i] &lt;&lt; "\"" &lt;&lt; std::endl;
+
+            return parse(args);
+        }
+
+        bool parse(const std::vector&lt;std::string&gt;&amp; args) {
+            int argc = static_cast&lt;int&gt;(args.size());
+            std::vector&lt;const char*&gt; argv(argc);
+
+            for (int i = 0; i &lt; argc; i++)
+                argv[i] = args[i].c_str();
+
+            return parse(argc, &amp;argv[0]);
+        }
+
+<span style = "background-color:#dfd">        bool parse(int argc, const char* const argv[]) {
+            errors.clear();
+            others.clear();</span>
+
+<span style = "background-color:#dfd">            if (argc &lt; 1) {</span>
+<span style = "background-color:#fdd">                errors.push_back("argument number must be longer than 0");
+                return false;</span>
+            }
+<span style = "background-color:#dfd">            if (prog_name == "")
+                prog_name = argv[0];</span>
+
+<span style = "background-color:#dfd">            std::map&lt;char, std::string&gt; lookup;
+            for (std::map&lt;std::string, option_base*&gt;::iterator p = options.begin();
+                p != options.end(); p++) {
+                if (p-&gt;first.length() == 0) continue;
+                char initial = p-&gt;second-&gt;short_name();
+                if (initial) {
+                    if (lookup.count(initial) &gt; 0) {</span>
+<span style = "background-color:#fdd">                        lookup[initial] = "";
+                        errors.push_back(std::string("short option '") + initial + "' is ambiguous");
+                        return false;
+                    }</span>
+<span style = "background-color:#dfd">                    else lookup[initial] = p-&gt;first;
+                }
+            }</span>
+
+<span style = "background-color:#dfd">            for (int i = 1; i &lt; argc; i++) {
+                if (strncmp(argv[i], "--", 2) == 0) {</span>
+<span style = "background-color:#fdd">                    const char* p = strchr(argv[i] + 2, '=');
+                    if (p) {
+                        std::string name(argv[i] + 2, p);
+                        std::string val(p + 1);
+                        set_option(name, val);
+                    }</span>
+                    else {
+<span style = "background-color:#fdd">                        std::string name(argv[i] + 2);
+                        if (options.count(name) == 0) {
+                            errors.push_back("undefined option: --" + name);
+                            continue;</span>
+                        }
+<span style = "background-color:#fdd">                        if (options[name]-&gt;has_value()) {
+                            if (i + 1 &gt;= argc) {
+                                errors.push_back("option needs value: --" + name);
+                                continue;
+                            }</span>
+                            else {
+<span style = "background-color:#fdd">                                i++;
+                                set_option(name, argv[i]);</span>
+                            }
+<span style = "background-color:#fdd">                        }</span>
+                        else {
+<span style = "background-color:#fdd">                            set_option(name);</span>
+                        }
+<span style = "background-color:#fdd">                    }
+                }</span>
+<span style = "background-color:#dfd">                else if (strncmp(argv[i], "-", 1) == 0) {
+                    if (!argv[i][1]) continue;
+                    char last = argv[i][1];
+                    for (int j = 2; argv[i][j]; j++) {</span>
+<span style = "background-color:#fdd">                        last = argv[i][j];
+                        if (lookup.count(argv[i][j - 1]) == 0) {
+                            errors.push_back(std::string("undefined short option: -") + argv[i][j - 1]);
+                            continue;</span>
+                        }
+<span style = "background-color:#fdd">                        if (lookup[argv[i][j - 1]] == "") {
+                            errors.push_back(std::string("ambiguous short option: -") + argv[i][j - 1]);
+                            continue;</span>
+                        }
+<span style = "background-color:#fdd">                        set_option(lookup[argv[i][j - 1]]);
+                    }</span>
+
+<span style = "background-color:#dfd">                    if (lookup.count(last) == 0) {</span>
+<span style = "background-color:#fdd">                        errors.push_back(std::string("undefined short option: -") + last);
+                        continue;</span>
+                    }
+<span style = "background-color:#dfd">                    if (lookup[last] == "") {</span>
+<span style = "background-color:#fdd">                        errors.push_back(std::string("ambiguous short option: -") + last);
+                        continue;</span>
+                    }
+
+<span style = "background-color:#dfd">                    if (i + 1 &lt; argc &amp;&amp; options[lookup[last]]-&gt;has_value()) {
+                        set_option(lookup[last], argv[i + 1]);
+                        i++;
+                    }</span>
+                    else {
+<span style = "background-color:#dfd">                        set_option(lookup[last]);</span>
+                    }
+<span style = "background-color:#dfd">                }</span>
+                else {
+<span style = "background-color:#fdd">                    others.push_back(argv[i]);</span>
+                }
+<span style = "background-color:#dfd">            }</span>
+
+<span style = "background-color:#dfd">            for (std::map&lt;std::string, option_base*&gt;::iterator p = options.begin();
+                p != options.end(); p++)
+                if (!p-&gt;second-&gt;valid())</span>
+<span style = "background-color:#fdd">                    errors.push_back("need option: --" + std::string(p-&gt;first));</span>
+
+<span style = "background-color:#dfd">            return errors.size() == 0;
+        }</span>
+
+        void parse_check(const std::string&amp; arg) {
+            if (!options.count("help"))
+                add("help", '?', "print this message");
+            check(0, parse(arg));
+        }
+
+        void parse_check(const std::vector&lt;std::string&gt;&amp; args) {
+            if (!options.count("help"))
+                add("help", '?', "print this message");
+            check(args.size(), parse(args));
+        }
+
+<span style = "background-color:#dfd">        void parse_check(int argc, char* argv[]) {
+            if (!options.count("help"))
+                add("help", '?', "print this message");
+            check(argc, parse(argc, argv));
+        }</span>
+
+<span style = "background-color:#fdd">        std::string error() const {
+            return errors.size() &gt; 0 ? errors[0] : "";
+        }</span>
+
+        std::string error_full() const {
+            std::ostringstream oss;
+            for (size_t i = 0; i &lt; errors.size(); i++)
+                oss &lt;&lt; errors[i] &lt;&lt; std::endl;
+            return oss.str();
+        }
+
+<span style = "background-color:#fdd">        std::string usage() const {
+            std::ostringstream oss;
+            oss &lt;&lt; "usage: " &lt;&lt; prog_name &lt;&lt; " ";
+            for (size_t i = 0; i &lt; ordered.size(); i++) {
+                if (ordered[i]-&gt;must())
+                    oss &lt;&lt; ordered[i]-&gt;short_description() &lt;&lt; " ";
+            }</span>
+
+<span style = "background-color:#fdd">            oss &lt;&lt; "[options] ... " &lt;&lt; ftr &lt;&lt; std::endl;
+            oss &lt;&lt; "options:" &lt;&lt; std::endl;</span>
+
+<span style = "background-color:#fdd">            size_t max_width = 0;
+            for (size_t i = 0; i &lt; ordered.size(); i++) {
+                max_width = max(max_width, ordered[i]-&gt;name().length());
+            }
+            for (size_t i = 0; i &lt; ordered.size(); i++) {
+                if (ordered[i]-&gt;short_name()) {
+                    oss &lt;&lt; "  -" &lt;&lt; ordered[i]-&gt;short_name() &lt;&lt; ", ";
+                }</span>
+                else {
+<span style = "background-color:#fdd">                    oss &lt;&lt; "      ";</span>
+                }
+
+<span style = "background-color:#fdd">                oss &lt;&lt; "--" &lt;&lt; ordered[i]-&gt;name();
+                for (size_t j = ordered[i]-&gt;name().length(); j &lt; max_width + 4; j++)
+                    oss &lt;&lt; ' ';
+                oss &lt;&lt; ordered[i]-&gt;description() &lt;&lt; std::endl;
+            }
+            return oss.str();
+        }</span>
+
+    private:
+
+<span style = "background-color:#dfd">        void check(int argc, bool ok) {
+            if ((argc == 1 &amp;&amp; !ok) || exist("help")) {</span>
+<span style = "background-color:#fdd">                std::cerr &lt;&lt; usage();
+                exit(0);</span>
+            }
+
+<span style = "background-color:#dfd">            if (!ok) {</span>
+<span style = "background-color:#fdd">                std::cerr &lt;&lt; error() &lt;&lt; std::endl &lt;&lt; usage();
+                exit(1);</span>
+            }
+<span style = "background-color:#dfd">        }</span>
+
+<span style = "background-color:#dfd">        void set_option(const std::string&amp; name) {
+            if (options.count(name) == 0) {</span>
+<span style = "background-color:#fdd">                errors.push_back("undefined option: --" + name);
+                return;</span>
+            }
+<span style = "background-color:#dfd">            if (!options[name]-&gt;set()) {</span>
+<span style = "background-color:#fdd">                errors.push_back("option needs value: --" + name);</span>
+                return;
+            }
+<span style = "background-color:#dfd">        }</span>
+
+<span style = "background-color:#dfd">        void set_option(const std::string&amp; name, const std::string&amp; value) {
+            if (options.count(name) == 0) {</span>
+<span style = "background-color:#fdd">                errors.push_back("undefined option: --" + name);
+                return;</span>
+            }
+<span style = "background-color:#dfd">            if (!options[name]-&gt;set(value)) {</span>
+<span style = "background-color:#fdd">                errors.push_back("option value is invalid: --" + name + "=" + value);</span>
+                return;
+            }
+<span style = "background-color:#dfd">        }</span>
+
+        class option_base {
+        public:
+<span style = "background-color:#dfd">            virtual ~option_base() {}</span>
+
+            virtual bool has_value() const = 0;
+            virtual bool set() = 0;
+            virtual bool set(const std::string&amp; value) = 0;
+            virtual bool has_set() const = 0;
+            virtual bool valid() const = 0;
+            virtual bool must() const = 0;
+
+            virtual const std::string&amp; name() const = 0;
+            virtual char short_name() const = 0;
+            virtual const std::string&amp; description() const = 0;
+            virtual std::string short_description() const = 0;
+        };
+
+        class option_without_value : public option_base {
+        public:
+<span style = "background-color:#dfd">            option_without_value(const std::string&amp; name,</span>
+                char short_name,
+                const std::string&amp; desc)
+<span style = "background-color:#dfd">                :nam(name), snam(short_name), desc(desc), has(false) {
+            }
+            ~option_without_value() {}</span>
+
+<span style = "background-color:#fdd">            bool has_value() const { return false; }</span>
+
+<span style = "background-color:#dfd">            bool set() {
+                has = true;
+                return true;
+            }</span>
+
+<span style = "background-color:#fdd">            bool set(const std::string&amp;) {
+                return false;
+            }</span>
+
+<span style = "background-color:#dfd">            bool has_set() const {
+                return has;
+            }</span>
+
+<span style = "background-color:#dfd">            bool valid() const {
+                return true;
+            }</span>
+
+<span style = "background-color:#fdd">            bool must() const {
+                return false;
+            }</span>
+
+<span style = "background-color:#fdd">            const std::string&amp; name() const {
+                return nam;
+            }</span>
+
+<span style = "background-color:#dfd">            char short_name() const {
+                return snam;
+            }</span>
+
+<span style = "background-color:#fdd">            const std::string&amp; description() const {
+                return desc;
+            }</span>
+
+<span style = "background-color:#fdd">            std::string short_description() const {
+                return "--" + nam;
+            }</span>
+
+        private:
+            std::string nam;
+            char snam;
+            std::string desc;
+            bool has;
+        };
+
+        template &lt;class T&gt;
+        class option_with_value : public option_base {
+        public:
+            option_with_value(const std::string&amp; name,
+                char short_name,
+                bool need,
+                const T&amp; def,
+                const std::string&amp; desc)
+<span style = "background-color:#dfd">                : nam(name), snam(short_name), need(need), has(false)
+                , def(def), actual(def) {
+                this-&gt;desc = full_description(desc);
+            }
+            ~option_with_value() {}</span>
+
+<span style = "background-color:#dfd">            const T&amp; get() const {
+                return actual;
+            }</span>
+
+<span style = "background-color:#dfd">            bool has_value() const { return true; }</span>
+
+<span style = "background-color:#fdd">            bool set() {
+                return false;
+            }</span>
+
+<span style = "background-color:#dfd">            bool set(const std::string&amp; value) {
+                try {
+                    actual = read(value);
+                    has = true;
+                }</span>
+                catch (const std::exception&amp;) {
+<span style = "background-color:#fdd">                    return false;
+                }</span>
+<span style = "background-color:#dfd">                return true;
+            }</span>
+
+<span style = "background-color:#fdd">            bool has_set() const {
+                return has;
+            }</span>
+
+<span style = "background-color:#dfd">            bool valid() const {
+                if (need &amp;&amp; !has) return false;
+                return true;
+            }</span>
+
+<span style = "background-color:#fdd">            bool must() const {
+                return need;
+            }</span>
+
+<span style = "background-color:#fdd">            const std::string&amp; name() const {
+                return nam;
+            }</span>
+
+<span style = "background-color:#dfd">            char short_name() const {
+                return snam;
+            }</span>
+
+<span style = "background-color:#fdd">            const std::string&amp; description() const {
+                return desc;
+            }</span>
+
+<span style = "background-color:#fdd">            std::string short_description() const {
+                return "--" + nam + "=" + detail::readable_typename&lt;T&gt;();
+            }</span>
+
+        protected:
+<span style = "background-color:#dfd">            std::string full_description(const std::string&amp; desc) {
+                return</span>
+                    desc + " (" + detail::readable_typename&lt;T&gt;() +
+                    (need ? "" : " [=" + detail::default_value&lt;T&gt;(def) + "]")
+                    + ")";
+<span style = "background-color:#dfd">            }</span>
+
+            virtual T read(const std::string&amp; s) = 0;
+
+            std::string nam;
+            char snam;
+            bool need;
+            std::string desc;
+
+            bool has;
+            T def;
+            T actual;
+        };
+
+        template &lt;class T, class F&gt;
+        class option_with_value_with_reader : public option_with_value&lt;T&gt; {
+        public:
+            option_with_value_with_reader(const std::string&amp; name,
+                char short_name,
+                bool need,
+                const T def,
+                const std::string&amp; desc,
+                F reader)
+<span style = "background-color:#dfd">                : option_with_value&lt;T&gt;(name, short_name, need, def, desc), reader(reader) {
+            }</span>
+
+        private:
+<span style = "background-color:#dfd">            T read(const std::string&amp; s) {
+                return reader(s);
+            }</span>
+
+            F reader;
+        };
+
+        std::map&lt;std::string, option_base*&gt; options;
+        std::vector&lt;option_base*&gt; ordered;
+        std::string ftr;
+
+        std::string prog_name;
+        std::vector&lt;std::string&gt; others;
+
+        std::vector&lt;std::string&gt; errors;
+    };
+
+} // cmdline</pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

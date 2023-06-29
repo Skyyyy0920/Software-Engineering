@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>sudoku.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include "sudoku.h"
+#include "filedeal.h"
+#include "cmdline.h"
+using namespace std;
+
+
+<span style = "background-color:#dfd">int main(int argc, char* argv[]){</span>
+    // ´´½¨Ò»¸öparser
+<span style = "background-color:#dfd">    cmdline::parser a;</span>
+
+    // ²¹³ä¶ÔÓ¦µÄ²ÎÊý
+<span style = "background-color:#dfd">    a.add&lt;int&gt;("create", 'c', "The number of Sudoku finals required", false, 0, cmdline::range(1, 1000000));
+    a.add&lt;string&gt;("solve", 's', "The path to the Sudoku board file that needs to be solved", false, "");
+    a.add&lt;int&gt;("number", 'n', "The number of Sudoku games needed", false, 0, cmdline::range(1, 10000));
+    a.add&lt;int&gt;("manage", 'm', "The difficulty of generating a Sudoku game", false, 0, cmdline::range(1, 3));
+    a.add&lt;int&gt;("range", 'r', "The range of the number of knockouts in the game", false, 0, cmdline::range(20, 55));
+    a.add("unique", 'u', "The solution unique to the game");</span>
+
+<span style = "background-color:#dfd">    a.parse_check(argc, argv);</span>
+
+    // ÅÐ¶ÏÊäÈëµÄÃüÁî£¬¿ªÊ¼²âÊÔ
+<span style = "background-color:#dfd">    if (a.get&lt;int&gt;("create") != 0) {</span>
+        // ²âÊÔÉú³ÉÊý¶ÀÖÕÅÌµ½ÎÄ¼þÖ®ÖÐ
+<span style = "background-color:#dfd">        create_sudoku(a.get&lt;int&gt;("create"));</span>
+    }
+    // ²ÎÊýs
+<span style = "background-color:#dfd">    if (a.get&lt;string&gt;("solve") != "") {</span>
+<span style = "background-color:#fdd">        if (fileExists(a.get&lt;string&gt;("solve"))) {
+            solve_sudoku(a.get&lt;string&gt;("solve"));
+        }</span>
+        else {
+<span style = "background-color:#fdd">            cout &lt;&lt; "Error : "</span>
+                 &lt;&lt; "The game file does not exist in the current directory!!!"
+                 &lt;&lt; endl;
+        }
+    }
+    // ²ÎÊýn
+<span style = "background-color:#dfd">    if (a.get&lt;int&gt;("number") != 0 &amp;&amp; a.get&lt;int&gt;("manage") == 0 &amp;&amp; a.get&lt;int&gt;("range") == 0 &amp;&amp; !a.exist("unique")) {</span>
+<span style = "background-color:#fdd">        create_game(a.get&lt;int&gt;("number"));</span>
+    }
+    // ÌØÊâÇé¿ö£¬Í¬Ê±ÊäÈëÁËm£¬n£¬r£¬±¨´í
+<span style = "background-color:#dfd">    if (a.get&lt;int&gt;("number") != 0 &amp;&amp; a.get&lt;int&gt;("manage") != 0 &amp;&amp; a.get&lt;int&gt;("range") != 0) {
+        cout &lt;&lt; "Error : "</span>
+             &lt;&lt; "Too many parameters. Have the parameter n, m, r!!!"
+             &lt;&lt; endl;
+    }
+    // ²ÎÊým
+<span style = "background-color:#dfd">    if (a.get&lt;int&gt;("manage") != 0) {
+        if (a.get&lt;int&gt;("number") != 0) {
+            create_game(a.get&lt;int&gt;("number"), a.get&lt;int&gt;("manage"));
+        }</span>
+        else {
+<span style = "background-color:#fdd">            cout &lt;&lt; "Error : "</span>
+                 &lt;&lt; "Have the parameter m, but don't have the parameter n!!!"
+                 &lt;&lt; endl;
+        }
+    }
+    // ²ÎÊýr
+<span style = "background-color:#dfd">    if (a.get&lt;int&gt;("range") != 0) {
+        if (a.get&lt;int&gt;("number") != 0) {
+            create_game_range(a.get&lt;int&gt;("number"), a.get&lt;int&gt;("range"));
+        }</span>
+        else {
+<span style = "background-color:#fdd">            cout &lt;&lt; "Error : "</span>
+                 &lt;&lt; "Have the parameter r, but don't have the parameter n!!!"
+                 &lt;&lt; endl;
+        }
+    }
+    // ²ÎÊýu
+<span style = "background-color:#dfd">    if (a.exist("unique")) {
+        if (a.get&lt;int&gt;("number") != 0) {
+            create_game_unique(a.get&lt;int&gt;("number"));
+        }</span>
+        else {
+<span style = "background-color:#fdd">            cout &lt;&lt; "Error : "</span>
+                 &lt;&lt; "Have the parameter u, but don't have the parameter n!!!"
+                 &lt;&lt; endl;
+        }
+    }
+    // Ã»ÓÐ²ÎÊýµÄÊ±ºò»á¸ø³öÊý¶ÀµÄexample
+<span style = "background-color:#dfd">    if (argc == 1) {</span>
+<span style = "background-color:#fdd">        cout &lt;&lt; " ----- Show the sudoku example ----- " &lt;&lt; endl;</span>
+
+        // ´´½¨Ò»¸ö9*9µÄ¿Õ¶þÎ¬Êý×é
+<span style = "background-color:#fdd">        vector&lt;vector&lt;char&gt;&gt;blank(9, vector&lt;char&gt;(9, '$'));
+        sudoku s(blank);
+        s.create(50, blank);  // ´´½¨50¸ö¿Õ¸ñµÄÊý¶À
+        if (s.active){
+            cout &lt;&lt; endl &lt;&lt; " ----- The Gen of the sudoku ----- " &lt;&lt; endl;
+            s.printBoard(blank);
+        }</span>
+        else{
+<span style = "background-color:#fdd">            cout &lt;&lt; endl &lt;&lt; " ----- The sudoku is invalid -----" &lt;&lt; endl;</span>
+        }
+
+        // ½âÊý¶Àº¯Êý
+<span style = "background-color:#fdd">        s.dfs(blank, 0);
+        if (s.active){
+            cout &lt;&lt; endl &lt;&lt;  " ----- The solution of the sudoku ----- " &lt;&lt; endl;
+            s.printBoard(blank);
+        }</span>
+        else{
+<span style = "background-color:#fdd">            cout &lt;&lt; endl &lt;&lt; " ----- The sudoku is invalid -----" &lt;&lt; endl;</span>
+        }
+<span style = "background-color:#fdd">    }</span>
+
+    /* just for test
+
+    // ²âÊÔÑùÀý1
+    cout &lt;&lt; " ----- Show the sudoku example ----- " &lt;&lt; endl;
+
+    // ´´½¨Ò»¸ö9*9µÄ¿Õ¶þÎ¬Êý×é
+    vector&lt;vector&lt;char&gt;&gt;blank(9, vector&lt;char&gt;(9, '$'));
+    sudoku s(blank);
+    s.create(50, blank);  // ´´½¨50¸ö¿Õ¸ñµÄÊý¶À
+    if (s.active) {
+        cout &lt;&lt; endl &lt;&lt; " ----- The Gen of the sudoku ----- " &lt;&lt; endl;
+        s.printBoard(blank);
+    }
+    else {
+        cout &lt;&lt; endl &lt;&lt; " ----- The sudoku is invalid -----" &lt;&lt; endl;
+    }
+
+    // ½âÊý¶Àº¯Êý
+    s.dfs(blank, 0);
+    if (s.active) {
+        cout &lt;&lt; endl &lt;&lt; " ----- The solution of the sudoku ----- " &lt;&lt; endl;
+        s.printBoard(blank);
+    }
+    else {
+        cout &lt;&lt; endl &lt;&lt; " ----- The sudoku is invalid -----" &lt;&lt; endl;
+    }
+
+    // ²âÊÔÑùÀý2
+    create_sudoku(10);
+
+    // ²âÊÔÑùÀý3
+    create_sudoku(100);
+
+    // ²âÊÔÑùÀý4
+    solve_sudoku("game.txt");
+
+    // ²âÊÔÑùÀý5
+    create_game(10);
+
+    // ²âÊÔÑùÀý6
+    create_game(100);
+
+    // ²âÊÔÑùÀý7
+    create_game(5, 1);
+
+    // ²âÊÔÑùÀý8
+    create_game(5, 3);
+
+    // ²âÊÔÑùÀý9
+    create_game_range(5, 20);
+
+    // ²âÊÔÑùÀý10
+    create_game_range(5, 50);
+
+    */
+
+<span style = "background-color:#dfd">    system("pause");
+    return 0;
+}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

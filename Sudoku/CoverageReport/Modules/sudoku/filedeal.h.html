@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>filedeal.h</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#pragma once
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;map&gt;
+#include "sudoku.h"
+using namespace std;
+
+
+// ÄÑ¶ÈµÈ¼¶Óë¿Õ¸ñÊýÄ¿µÄ¼üÖµ¶Ô
+<span style = "background-color:#dfd">map&lt;int, int&gt; diff_map = {</span>
+        {1, 20},
+        {2, 40},
+        {3, 55}
+<span style = "background-color:#dfd">};</span>
+// ½âÊý¶ÀÎÄ¼þµÃµ½µÄ½á¹ûÂ·¾¶
+<span style = "background-color:#dfd">string output_path = "sudoku.txt";</span>
+
+
+// ÅÐ¶ÏÎÄ¼þÊÇ·ñ´æÔÚÓÚ¹¤×÷Ä¿Â¼
+<span style = "background-color:#fdd">bool fileExists(const string&amp; fileName) {
+    ifstream file(fileName);
+    return file.good();  // ¼ì²éÎÄ¼þÊÇ·ñ³É¹¦´ò¿ª
+}</span>
+
+// ¶ÔÓ¦c²ÎÊý£¬Éú³ÉsudoÖÕ¾ÖÎÄ¼þ
+<span style = "background-color:#dfd">void create_sudoku(int num){</span>
+    // ÏÈ½«Ôø¾­Éú³ÉµÄÄÚÈÝÇå¿Õ
+<span style = "background-color:#dfd">    ofstream f("board.txt", ios_base::out);</span>
+
+<span style = "background-color:#dfd">    cout &lt;&lt; "Begin to create the sudoku board ..." &lt;&lt; endl;
+    vector&lt;vector&lt;vector&lt;char&gt;&gt;&gt; Grids;
+    sudoku temp;
+    temp.generateSudokuGrids(Grids, num);
+    for (auto grid : Grids) {
+        temp.outputBoard(grid, f);
+    }
+    cout &lt;&lt; "Finish to create the sudoku board !!!" &lt;&lt; endl;
+    f.close();
+}</span>
+
+// ¶ÔÓ¦s²ÎÊý£¬½âÊý¶ÀÎÄ¼þ
+<span style = "background-color:#fdd">void solve_sudoku(string filepath) {</span>
+    // ¶ÁÈ¡ÎÄ¼þ
+<span style = "background-color:#fdd">    ofstream fout("sudoku.txt", ios_base::out);</span>
+
+<span style = "background-color:#fdd">    ifstream fin;
+    fin.open(filepath, ios::in);
+    string s;
+    int index = 0;  // ±ê¼Çindex£¬Èç¹ûindexÎª9Ôò½øÐÐÇó½â
+    vector&lt;vector&lt;char&gt;&gt;temp_vec;</span>
+
+<span style = "background-color:#fdd">    cout &lt;&lt; "Begin to solve the sudoku game ..." &lt;&lt; endl;</span>
+    // ÖðÐÐ¶ÁÈ¡Êý¾Ý²¢´æÓÚsÖÐ£¬Ö±ÖÁÊý¾ÝÈ«²¿¶ÁÈ¡
+<span style = "background-color:#fdd">    while(getline(fin, s)){</span>
+        // cout &lt;&lt; s.c_str() &lt;&lt; endl;
+<span style = "background-color:#fdd">        vector&lt;char&gt; extractedChars;
+        for (char c : s) {
+            if (c &gt;= '1' &amp;&amp; c &lt;= '9' || c == '$') {
+                extractedChars.push_back(c);</span>
+            }
+<span style = "background-color:#fdd">        }
+        if (!extractedChars.empty()) {
+            index++;
+            temp_vec.push_back(extractedChars);</span>
+        }
+        // ·Åµ½Íâ²ãµÄvectorÖ®ÖÐ
+<span style = "background-color:#fdd">        if (index == 9) {
+            sudoku solution(temp_vec);
+            solution.dfs(temp_vec, 0);
+            solution.outputBoard(temp_vec, fout);</span>
+            
+<span style = "background-color:#fdd">            temp_vec.clear();
+            index = 0;
+            temp_vec.clear();</span>
+        }
+<span style = "background-color:#fdd">    }</span>
+
+<span style = "background-color:#fdd">    cout &lt;&lt; "Finish to solve the sudoku game !!!" &lt;&lt; endl;
+    fin.close();
+    fout.close();
+}</span>
+
+// ¶ÔÓ¦n²ÎÊý£¬Éú³ÉgameÊý¶ÀÓÎÏ·
+<span style = "background-color:#dfd">void create_game(int num, int m = 1){</span>
+    // ÏÈ½«Ôø¾­Éú³ÉµÄÄÚÈÝÇå¿Õ
+<span style = "background-color:#dfd">    ofstream f("game.txt", ios_base::out);</span>
+
+<span style = "background-color:#dfd">    cout &lt;&lt; "Begin to create the game board ..." &lt;&lt; endl;
+    for (int i = 0; i &lt; num; i++){
+        vector&lt;vector&lt;char&gt;&gt;blank(9, vector&lt;char&gt;(9, '$'));
+        sudoku temp(blank);
+        temp.create(diff_map[m], blank);
+        temp.outputBoard(blank, f);
+    }
+    cout &lt;&lt; "Finish to create the game board !!!" &lt;&lt; endl;
+    f.close();
+}</span>
+
+// ¶ÔÓ¦r²ÎÊý£¬Éú³ÉgameÊý¶ÀÓÎÏ·
+<span style = "background-color:#dfd">void create_game_range(int num, int r) {</span>
+    // ÏÈ½«Ôø¾­Éú³ÉµÄÄÚÈÝÇå¿Õ
+<span style = "background-color:#dfd">    ofstream f("game.txt", ios_base::out);</span>
+
+<span style = "background-color:#dfd">    cout &lt;&lt; "Begin to create the game board ..." &lt;&lt; endl;
+    for (int i = 0; i &lt; num; i++) {
+        vector&lt;vector&lt;char&gt;&gt;blank(9, vector&lt;char&gt;(9, '$'));
+        sudoku temp(blank);
+        temp.create(r, blank);
+        temp.outputBoard(blank, f);
+    }
+    cout &lt;&lt; "Finish to create the game board !!!" &lt;&lt; endl;
+    f.close();
+}</span>
+
+// ¶ÔÓ¦u²ÎÊý£¬Éú³ÉÎ¨Ò»½âµÄº¯Êý£¬Ä¬ÈÏÉú³É20¸ö¿Õ
+<span style = "background-color:#dfd">void create_game_unique(int num) {</span>
+    // ÏÈ½«Ôø¾­Éú³ÉµÄÄÚÈÝÇå¿Õ
+<span style = "background-color:#dfd">    ofstream f("unique_game.txt", ios_base::out);</span>
+
+<span style = "background-color:#dfd">    cout &lt;&lt; "Begin to create the game board having the unique answer ..." &lt;&lt; endl;</span>
+    /*
+    for (int i = 0; i &lt; num; i++) {
+        vector&lt;vector&lt;char&gt;&gt;blank(9, vector&lt;char&gt;(9, '$'));
+        sudoku temp(blank);
+        temp.create(20, blank);
+        temp.outputBoard(blank, f);
+    }
+    */
+<span style = "background-color:#dfd">    int index = 0;
+    while (index &lt; num) {
+        vector&lt;vector&lt;char&gt;&gt;blank(9, vector&lt;char&gt;(9, '$'));
+        sudoku temp(blank);
+        temp.create(50, blank);
+        int n = temp.countSudokuSolutions(blank);
+        if (n == 1) {
+            index++;
+            temp.outputBoard(blank, f);
+            cout &lt;&lt; "The Gen sudoku solution number: " &lt;&lt; n &lt;&lt; "    (Accepted)" &lt;&lt; endl;
+        }</span>
+        else {
+<span style = "background-color:#dfd">            cout &lt;&lt; "The Gen sudoku solution number: " &lt;&lt; n &lt;&lt; "    (Rejected)" &lt;&lt; endl;</span>
+        }
+<span style = "background-color:#dfd">    }
+    cout &lt;&lt; "Finish to create the game board having the unique answer !!!" &lt;&lt; endl;
+    f.close();
+}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>
